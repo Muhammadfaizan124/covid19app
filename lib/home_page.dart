@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   "Recovered": 15,
                 },
                 chartRadius: MediaQuery.of(context).size.width / 2.2,
-                animationDuration: const Duration(seconds: 2),
+                animationDuration: const Duration(seconds: 5),
                 colorList: colorlist,
               ),
               Padding(
