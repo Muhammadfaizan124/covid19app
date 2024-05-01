@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:covid19app/info_row.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:pie_chart/pie_chart.dart';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,12 +18,58 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final AnimationController controller =
       AnimationController(duration: const Duration(seconds: 3), vsync: this)
         ..repeat();
+  final Map<String, double> dataMap = {
+    "deaths": 0,
+    "total": 0,
+    "recovered": 0,
+  };
   //colors for pie chart
   final colorlist = [
     const Color(0xffde5246),
     const Color(0xff4285f4),
     const Color(0xff1aa260),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://covid-193.p.rapidapi.com/statistics'),
+        headers: {
+          'X-RapidAPI-Key':
+              'c3c281ff1bmshd11d11a6801cb1fp16a710jsnd79fcdb3f7fe',
+          'X-RapidAPI-Host': 'covid-193.p.rapidapi.com',
+        },
+      );
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        // Extracting data
+        final List<dynamic> countriesData = responseData['response'];
+        final Map<String, dynamic> firstCountryData = countriesData.first;
+        final Map<String, dynamic> casesData = firstCountryData['cases'];
+        // Updating dataMap
+        setState(() {
+          dataMap['deaths'] =
+              double.parse(casesData['deaths']['total'].toString());
+          dataMap['total'] = double.parse(casesData['total'].toString());
+          dataMap['recovered'] =
+              double.parse(casesData['recovered']['total'].toString());
+        });
+      } else {
+        // Handle error when fetching data
+        print('Failed to load data');
+      }
+    } catch (error) {
+      // Handle error when making HTTP request
+      print('Error: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -33,11 +82,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Column(
             children: [
               PieChart(
-                dataMap: const {
-                  "Death": 5,
-                  "total": 20,
-                  "Recovered": 15,
-                },
+                dataMap: dataMap,
                 chartRadius: MediaQuery.of(context).size.width / 2.2,
                 animationDuration: const Duration(seconds: 5),
                 colorList: colorlist,
