@@ -18,7 +18,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final AnimationController controller =
       AnimationController(duration: const Duration(seconds: 3), vsync: this)
         ..repeat();
-  final Map<String, double> dataMap = {
+  Map<String, double> dataMap = {
     "deaths": 0,
     "total": 0,
     "recovered": 0,
@@ -38,34 +38,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> fetchData() async {
     try {
-      final response = await http.get(
-        Uri.parse('https://covid-193.p.rapidapi.com/statistics'),
-        headers: {
-          'X-RapidAPI-Key':
-              'c3c281ff1bmshd11d11a6801cb1fp16a710jsnd79fcdb3f7fe',
-          'X-RapidAPI-Host': 'covid-193.p.rapidapi.com',
-        },
-      );
+      final response =
+          await http.get(Uri.parse('https://disease.sh/v3/covid-19/all'));
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        // Extracting data
-        final List<dynamic> countriesData = responseData['response'];
-        final Map<String, dynamic> firstCountryData = countriesData.first;
-        final Map<String, dynamic> casesData = firstCountryData['cases'];
-        // Updating dataMap
         setState(() {
-          dataMap['deaths'] =
-              double.parse(casesData['deaths']['total'].toString());
-          dataMap['total'] = double.parse(casesData['total'].toString());
-          dataMap['recovered'] =
-              double.parse(casesData['recovered']['total'].toString());
+          dataMap = {
+            "Deaths": responseData['deaths'].toDouble(),
+            "Cases": responseData['cases'].toDouble(),
+            "Recovered": responseData['recovered'].toDouble(),
+          };
         });
       } else {
-        // Handle error when fetching data
-        print('Failed to load data');
+        print('Failed to load data: ${response.statusCode}');
       }
     } catch (error) {
-      // Handle error when making HTTP request
       print('Error: $error');
     }
   }
@@ -86,6 +73,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 chartRadius: MediaQuery.of(context).size.width / 2.2,
                 animationDuration: const Duration(seconds: 5),
                 colorList: colorlist,
+                chartValuesOptions: const ChartValuesOptions(
+                  showChartValuesInPercentage: true,
+                ),
+                chartType: ChartType.ring,
               ),
               Padding(
                 padding: EdgeInsets.symmetric(
@@ -93,9 +84,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: Card(
                   child: Column(
                     children: [
-                      InfoRow(title: "death", value: "200"),
-                      InfoRow(title: "death", value: "200"),
-                      InfoRow(title: "death", value: "200"),
+                      InfoRow(
+                          title: "death", value: dataMap["Deaths"]!.toString()),
+                      InfoRow(
+                          title: "cases", value: dataMap["Cases"]!.toString()),
+                      InfoRow(
+                          title: "recovered",
+                          value: dataMap["Recovered"]!.toString()),
                     ],
                   ),
                 ),
@@ -107,7 +102,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const Searchcountries()),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           minimumSize:
                               Size(screenWidth * 1.0, screenHeight * 0.09),
