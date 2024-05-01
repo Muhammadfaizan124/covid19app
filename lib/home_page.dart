@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:covid19app/apis.dart';
 import 'package:covid19app/info_row.dart';
+import 'package:covid19app/search_countries.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -38,8 +40,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> fetchData() async {
     try {
-      final response =
-          await http.get(Uri.parse('https://disease.sh/v3/covid-19/all'));
+      final response = await http.get(Uri.parse(AppUrl.worldStates));
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         setState(() {
@@ -61,6 +62,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white70,
       body: SafeArea(
